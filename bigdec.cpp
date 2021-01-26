@@ -1,3 +1,7 @@
+// bigdec.cpp
+// author bombard1004
+// last_update Jan 26 2021
+
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -5,9 +9,17 @@ using namespace std;
 class BigDecimal {
 private:
     vector<int> digits;
+    bool sign;
 
 public:
-    BigDecimal(unsigned long long x) {
+    BigDecimal(long long x) {
+        if(x < 0) {
+            x = -x;
+            sign = true;
+        }
+        else
+            sign = false;
+
         if(x == 0)
             digits.push_back(0);
         
@@ -17,23 +29,62 @@ public:
         }
     }
 
+    BigDecimal(string &s) {
+        auto endIt = s.rend();
+        if(s[0] == '-') {
+            endIt--;
+            sign = true;
+        }
+        else
+            sign = false;
+        
+        for(auto it = s.rbegin(); it != endIt; it++)
+            digits.push_back(*it - '0');
+    }
+
     vector<int> &getDigits() {
         return digits;
     }
 
-    void print() {
+    void print(char endc = '\n') {
+        if(sign)
+            printf("-");
+        
         for(auto it = digits.rbegin(); it != digits.rend(); it++)
             printf("%d", *it);
         
-        puts("");
+        printf("%c", endc);
         return;
     }
 
+    size_t length() {
+        return digits.size();
+    }
+
+    void negate() {
+        sign = !sign;
+        return;
+    }
+
+    BigDecimal copy() {
+        BigDecimal ret(0);
+        ret.sign = sign;
+        ret.digits = vector<int>(digits.begin(), digits.end());
+        return ret;
+    }
+
+    BigDecimal operator - () {
+        BigDecimal ret = this->copy();
+        ret.negate();
+        return ret;
+    }
+        
     bool operator == (BigDecimal &bd) {
-        if(digits.size() != bd.digits.size())
+        if(this->length() != bd.length()
+        || sign != bd.sign)
             return false;
         
-        int n = digits.size();
+        int n = this->length();
         for(int i = 0; i < n; i++)
             if(digits[i] != bd.digits[i])
                 return false;
@@ -41,7 +92,36 @@ public:
         return true;
     }
 
+    bool operator < (BigDecimal &bd) {
+        if(sign != bd.sign) {
+            return sign;
+        }
+
+        if(this->length() != bd.length())
+            return (this->length() < bd.length()) ^ sign;
+        
+        int l = this->length();
+        for(int i = l-1; i >= 0; i--) {
+            if(digits[i] != bd.digits[i])
+                return (digits[i] < bd.digits[i]) ^ sign;
+        }
+
+        return false;
+    }
+
     BigDecimal operator + (BigDecimal &bd) {
+        if(sign && bd.sign) {
+            BigDecimal ng1 = -(*this);
+            BigDecimal ng2 = -bd;
+            return -(ng1 + ng2);
+        }
+        if(sign) {
+            return bd - *this;
+        }
+        if(bd.sign) {
+            return *this - bd;
+        }
+
         vector<int> dg1(digits), dg2(bd.digits);
         int carry = 0;
         BigDecimal res(0); res.digits.pop_back();
@@ -60,19 +140,54 @@ public:
         return res;
     }
 
+    BigDecimal operator - (BigDecimal &bd) {
+        if(*this < bd)
+            return -(bd - *this);
+        if(*this == bd)
+            return BigDecimal(0);
+        
+        if(sign) {
+            BigDecimal ng1 = (-bd);
+            BigDecimal ng2 = -(*this);
+            return ng1 - ng2;
+        }
+        if(bd.sign) {
+            BigDecimal ng = -bd;
+            return *this + ng;
+        }
+
+        vector<int> dg1(digits), dg2(bd.digits);
+        int carry = 0;
+        BigDecimal res(0); res.digits.pop_back();
+        
+        int longerL = max(dg1.size(), dg2.size());
+        dg1.resize(longerL); dg2.resize(longerL);
+
+        for(int i = 0; i < longerL; i++) {
+            int d = dg1[i] - dg2[i] + carry;
+            carry = -(int)(d < 0);
+            res.digits.push_back((d+10) % 10);
+        }
+        while(res.digits.back() == 0)
+            res.digits.pop_back();
+        
+        return res;
+    }
+
     BigDecimal operator * (BigDecimal &bd) {
         BigDecimal res(0);
         BigDecimal zeroBD(0);
         BigDecimal tenBD(10);
 
-        if(bd == zeroBD) {
+        if(*this == zeroBD || bd == zeroBD) {
             return zeroBD;
         }
-        else if(bd.digits.size() == 1) {
+        else if(bd.length() == 1) {
             int carry = 0;
             res.digits.pop_back();
             
-            for(int i = 0; i < digits.size(); i++) {
+            int l = this->length();
+            for(int i = 0; i < l; i++) {
                 int d = digits[i] * bd.digits[0] + carry;
                 carry = d / 10;
                 res.digits.push_back(d % 10);
@@ -96,6 +211,7 @@ public:
             res = t1 + t2;
         }
 
+        res.sign = sign ^ bd.sign;
         return res;
     }
 
