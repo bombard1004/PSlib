@@ -1,8 +1,16 @@
 // matrix.cpp
 // author bombard1004
-// last_update Jan 27 2021
+// last_update Jan 28 2021
 
 #include <bits/stdc++.h>
+
+class Matrix;
+class SquareMatrix;
+class Column;
+
+SquareMatrix eye(int n);
+long long det(SquareMatrix &sqm);
+std::pair<bool, Column> Cramer(SquareMatrix &A, Column &b);
 
 class Matrix {
 private:
@@ -67,6 +75,18 @@ public:
         return ret;
     }
 
+    Matrix operator % (unsigned long long mod) {
+        Matrix ret(msize.first, msize.second);
+
+        for(int i = 0; i < msize.first; i++) {
+            for(int j = 0; j < msize.second; j++) {
+                ret[i][j] = mat[i][j] % mod;
+            }
+        }
+
+        return ret;
+    }
+
     std::vector<long long> & operator [] (int idx) {
         return mat[idx];
     }
@@ -77,6 +97,26 @@ public:
     SquareMatrix(int n):
         Matrix(n, n)
     {}
+
+    SquareMatrix(int n, std::vector<long long> &arr):
+        Matrix(n, n, arr)
+    {}
+
+    Matrix power(long long exponent, unsigned long long mod = 0) {
+        if(exponent == 0)
+            return eye(this->getSize().first);
+        
+        Matrix halfpower = power(exponent/2, mod);
+
+        if(exponent % 2) {
+            if(mod == 0) return halfpower * halfpower * *this;
+            else return (halfpower * halfpower % mod) * *this % mod;
+        }
+        else {
+            if(mod == 0) return halfpower * halfpower;
+            else return halfpower * halfpower % mod;
+        }
+    }
 };
 
 SquareMatrix eye(int n) {
@@ -108,4 +148,63 @@ long long det(SquareMatrix &sqm) {
     } while(std::next_permutation(Permut.begin(), Permut.end()));
 
     return res;
+}
+
+class Column : public Matrix {
+public:
+    Column(int n):
+        Matrix(n, 1)
+    {}
+
+    Column(int n, std::vector<long long> &arr):
+        Matrix(n, 1, arr)
+    {}
+};
+
+std::pair<bool, Column> Cramer(SquareMatrix &A, Column &b) {
+    int n1 = A.getSize().first, n2 = b.getSize().first;
+    if(n1 != n2)
+        return std::make_pair(false, Column(0));
+    int n = n1;
+
+    long long detA = det(A);
+    std::vector<long long> originalCol(n);
+
+    if(detA == 0) {
+        for(int j = 0; j < n; j++) {
+            for(int i = 0; i < n; i++) {
+                originalCol[i] = A[i][j];
+                A[i][j] = b[i][0];
+            }
+            
+            long long detAj = det(A);
+
+            for(int i = 0; i < n; i++)
+                A[i][j] = originalCol[i];
+            
+            if(detAj != 0)
+                return std::make_pair(false, Column(0));
+        }
+
+        return std::make_pair(true, Column(0));
+    }
+    else {
+        Column res(n);
+        
+        for(int j = 0; j < n; j++) {
+            for(int i = 0; i < n; i++) {
+                originalCol[i] = A[i][j];
+                A[i][j] = b[i][0];
+            }
+            
+            long long detAj = det(A);
+
+            for(int i = 0; i < n; i++)
+                A[i][j] = originalCol[i];
+            
+            res[j][0] = detAj / detA;
+        }
+
+        return std::make_pair(true, res);
+    }
 }
