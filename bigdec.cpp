@@ -10,11 +10,6 @@ private:
     bool sign;
 
 public:
-    BigDecimal(BigDecimal &bd) {
-        digits = std::vector<int>(bd.digits.begin(), bd.digits.end());
-        sign = bd.sign;
-    }
-
     BigDecimal(long long x) {
         if(x < 0) {
             x = -x;
@@ -69,8 +64,15 @@ public:
         return;
     }
 
+    BigDecimal copy() {
+        BigDecimal ret(0);
+        ret.sign = sign;
+        ret.digits = std::vector<int>(digits.begin(), digits.end());
+        return ret;
+    }
+
     BigDecimal operator - () {
-        BigDecimal ret = BigDecimal(*this);
+        BigDecimal ret = this->copy();
         ret.negate();
         return ret;
     }
