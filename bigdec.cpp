@@ -1,17 +1,20 @@
 // bigdec.cpp
 // author bombard1004
-// last_update Jan 26 2021
+// last_update Feb 1 2021
 
 #include <bits/stdc++.h>
 
-using namespace std;
-
 class BigDecimal {
 private:
-    vector<int> digits;
+    std::vector<int> digits;
     bool sign;
 
 public:
+    BigDecimal(BigDecimal &bd) {
+        digits = std::vector<int>(bd.digits.begin(), bd.digits.end());
+        sign = bd.sign;
+    }
+
     BigDecimal(long long x) {
         if(x < 0) {
             x = -x;
@@ -29,7 +32,7 @@ public:
         }
     }
 
-    BigDecimal(string &s) {
+    BigDecimal(std::string &s) {
         auto endIt = s.rend();
         if(s[0] == '-') {
             endIt--;
@@ -42,7 +45,7 @@ public:
             digits.push_back(*it - '0');
     }
 
-    vector<int> &getDigits() {
+    std::vector<int> &getDigits() {
         return digits;
     }
 
@@ -66,15 +69,8 @@ public:
         return;
     }
 
-    BigDecimal copy() {
-        BigDecimal ret(0);
-        ret.sign = sign;
-        ret.digits = vector<int>(digits.begin(), digits.end());
-        return ret;
-    }
-
     BigDecimal operator - () {
-        BigDecimal ret = this->copy();
+        BigDecimal ret = BigDecimal(*this);
         ret.negate();
         return ret;
     }
@@ -90,6 +86,10 @@ public:
                 return false;
         
         return true;
+    }
+    bool operator == (long long x) {
+        BigDecimal bd(x);
+        return *this == bd;
     }
 
     bool operator < (BigDecimal &bd) {
@@ -122,11 +122,11 @@ public:
             return *this - bd;
         }
 
-        vector<int> dg1(digits), dg2(bd.digits);
+        std::vector<int> dg1(digits), dg2(bd.digits);
         int carry = 0;
         BigDecimal res(0); res.digits.pop_back();
         
-        int longerL = max(dg1.size(), dg2.size());
+        int longerL = std::max(dg1.size(), dg2.size());
         dg1.resize(longerL); dg2.resize(longerL);
 
         for(int i = 0; i < longerL; i++) {
@@ -138,6 +138,10 @@ public:
             res.digits.push_back(1);
         
         return res;
+    }
+    BigDecimal operator + (long long x) {
+        BigDecimal bd(x);
+        return *this + bd;
     }
 
     BigDecimal operator - (BigDecimal &bd) {
@@ -156,11 +160,11 @@ public:
             return *this + ng;
         }
 
-        vector<int> dg1(digits), dg2(bd.digits);
+        std::vector<int> dg1(digits), dg2(bd.digits);
         int carry = 0;
         BigDecimal res(0); res.digits.pop_back();
         
-        int longerL = max(dg1.size(), dg2.size());
+        int longerL = std::max(dg1.size(), dg2.size());
         dg1.resize(longerL); dg2.resize(longerL);
 
         for(int i = 0; i < longerL; i++) {
@@ -172,6 +176,10 @@ public:
             res.digits.pop_back();
         
         return res;
+    }
+    BigDecimal operator - (long long x) {
+        BigDecimal bd(x);
+        return *this - bd;
     }
 
     BigDecimal operator * (BigDecimal &bd) {
@@ -213,6 +221,10 @@ public:
 
         res.sign = sign ^ bd.sign;
         return res;
+    }
+    BigDecimal operator * (long long x) {
+        BigDecimal bd(x);
+        return *this * bd;
     }
 
     BigDecimal power(long long exponent) {

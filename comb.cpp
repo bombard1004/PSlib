@@ -1,6 +1,6 @@
 // comb.cpp
 // author bombard1004
-// last_update Jan 27 2021
+// last_update Feb 1 2021
 
 #include <bits/stdc++.h>
 
@@ -25,4 +25,17 @@ long long getComb(int n, int r, unsigned long long mod = 0) {
     if(mod) ret %= mod;
     
     return ret;
+}
+
+long long Lucas(long long n, long long k, long long m) {
+    long long res = 1;
+    while(n) {
+        long long ni = n % m, ki = k % m;
+        if(ni < ki) return 0;
+        res = res * getComb(ni, ki, m) % m;
+        n /= m;
+        k /= m;
+    }
+
+    return k ? 0 : res;
 }

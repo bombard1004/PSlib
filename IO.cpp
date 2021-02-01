@@ -1,32 +1,49 @@
-#include <bits/stdc++.h>
+// IO.cpp
+// author bombard1004
+// last_update Feb 1 2021
 
-using namespace std;
+#include <bits/stdc++.h>
 
 int nextInt() {
     int temp; scanf("%d", &temp);
     return temp;
 }
-
-void printPair(pair<int, int> &p) {
-    printf("%d %d\n", p.first, p.second);
-    return;
+long long nextLL() {
+    long long temp; scanf("%lld", &temp);
+    return temp;
 }
 
-void printVector(vector<int> &v) {
-    for(int e : v) printf("%d ", e);
-    puts("");
+void print(int x, char endc = '\n') {
+    printf("%d%c", x, endc);
+    return;
+}
+void print(long long x, char endc = '\n') {
+    printf("%lld%c", x, endc);
+    return;
+}
+void print(size_t x, char endc = '\n') {
+    printf("%zu%c", x, endc);
+    return;
+}
+void print(float x, char endc = '\n') {
+    printf("%f%c", x, endc);
+    return;
+}
+void print(double x, char endc = '\n') {
+    printf("%lf%c", x, endc);
     return;
 }
 
-void printInt(int x) {
-    printf("%d\n", x);
+template<typename T1, typename T2>
+void print(std::pair<T1, T2> &p, char sepc = ' ', char endc = '\n') {
+    print(p.first, sepc);
+    print(p.second, endc);
     return;
 }
-void printInt(long long x) {
-    printf("%lld\n", x);
-    return;
-}
-void printInt(size_t x) {
-    printf("%zu\n", x);
+
+template<typename T>
+void print(std::vector<T> &v, char sepc = ' ', char endc = '\n') {
+    for(T e : v) print(e, sepc);
+    printf("%c", endc);
     return;
 }
