@@ -1,6 +1,6 @@
 // bigdec.cpp
 // author bombard1004
-// last_update Feb 1 2021
+// last_update Feb 7 2021
 
 #include <bits/stdc++.h>
 
@@ -10,6 +10,11 @@ private:
     bool sign;
 
 public:
+    BigDecimal(const BigDecimal &bd) {
+        digits = std::vector<int>(bd.digits);
+        sign = bd.sign;
+    }
+
     BigDecimal(long long x) {
         if(x < 0) {
             x = -x;
@@ -27,7 +32,7 @@ public:
         }
     }
 
-    BigDecimal(std::string &s) {
+    BigDecimal(const std::string &s) {
         auto endIt = s.rend();
         if(s[0] == '-') {
             endIt--;
@@ -40,11 +45,11 @@ public:
             digits.push_back(*it - '0');
     }
 
-    std::vector<int> &getDigits() {
+    const std::vector<int> &getDigits() const {
         return digits;
     }
 
-    void print(char endc = '\n') {
+    void print(char endc = '\n') const {
         if(sign)
             printf("-");
         
@@ -55,7 +60,7 @@ public:
         return;
     }
 
-    size_t length() {
+    size_t length() const {
         return digits.size();
     }
 
@@ -64,20 +69,37 @@ public:
         return;
     }
 
-    BigDecimal copy() {
-        BigDecimal ret(0);
-        ret.sign = sign;
-        ret.digits = std::vector<int>(digits.begin(), digits.end());
+    BigDecimal tenfold() const {
+        if(!(*this))
+            return BigDecimal(0);
+
+        BigDecimal ret(*this);
+        ret.digits.insert(ret.digits.begin(), 0);
+        
         return ret;
     }
 
-    BigDecimal operator - () {
-        BigDecimal ret = this->copy();
+    BigDecimal tenth() const {
+        if(this->length() == 1)
+            return BigDecimal(0);
+        
+        BigDecimal ret(*this);
+        ret.digits.erase(ret.digits.begin());
+        
+        return ret;
+    }
+
+    BigDecimal operator - () const {
+        BigDecimal ret = BigDecimal(*this);
         ret.negate();
         return ret;
     }
+
+    bool operator ! () const {
+        return (digits.size() == 1 && digits[0] == 0 && !sign);
+    }
         
-    bool operator == (BigDecimal &bd) {
+    bool operator == (const BigDecimal &bd) const {
         if(this->length() != bd.length()
         || sign != bd.sign)
             return false;
@@ -89,12 +111,12 @@ public:
         
         return true;
     }
-    bool operator == (long long x) {
+    bool operator == (long long x) const {
         BigDecimal bd(x);
         return *this == bd;
     }
 
-    bool operator < (BigDecimal &bd) {
+    bool operator < (const BigDecimal &bd) const {
         if(sign != bd.sign) {
             return sign;
         }
@@ -111,18 +133,13 @@ public:
         return false;
     }
 
-    BigDecimal operator + (BigDecimal &bd) {
-        if(sign && bd.sign) {
-            BigDecimal ng1 = -(*this);
-            BigDecimal ng2 = -bd;
-            return -(ng1 + ng2);
-        }
-        if(sign) {
-            return bd - *this;
-        }
-        if(bd.sign) {
-            return *this - bd;
-        }
+    BigDecimal operator + (const BigDecimal &bd) const {
+        if(sign && bd.sign)
+            return -(-(*this) + -bd);
+        if(sign)
+            return bd - -(*this);
+        if(bd.sign)
+            return *this - -bd;
 
         std::vector<int> dg1(digits), dg2(bd.digits);
         int carry = 0;
@@ -141,25 +158,21 @@ public:
         
         return res;
     }
-    BigDecimal operator + (long long x) {
-        BigDecimal bd(x);
-        return *this + bd;
+    BigDecimal operator + (long long x) const {
+        return *this + BigDecimal(x);
     }
 
-    BigDecimal operator - (BigDecimal &bd) {
+    BigDecimal operator - (const BigDecimal &bd) const {
         if(*this < bd)
             return -(bd - *this);
         if(*this == bd)
             return BigDecimal(0);
         
         if(sign) {
-            BigDecimal ng1 = (-bd);
-            BigDecimal ng2 = -(*this);
-            return ng1 - ng2;
+            return -bd - -(*this);
         }
         if(bd.sign) {
-            BigDecimal ng = -bd;
-            return *this + ng;
+            return *this + -bd;
         }
 
         std::vector<int> dg1(digits), dg2(bd.digits);
@@ -179,20 +192,26 @@ public:
         
         return res;
     }
-    BigDecimal operator - (long long x) {
-        BigDecimal bd(x);
-        return *this - bd;
+    BigDecimal operator - (long long x) const {
+        return *this - BigDecimal(x);
     }
 
-    BigDecimal operator * (BigDecimal &bd) {
-        BigDecimal res(0);
-        BigDecimal zeroBD(0);
+    BigDecimal operator * (const BigDecimal &bd) const {
         BigDecimal tenBD(10);
 
-        if(*this == zeroBD || bd == zeroBD) {
-            return zeroBD;
+        if(!(*this) || !bd) {
+            return BigDecimal(0);
         }
-        else if(bd.length() == 1) {
+
+        if(this->sign && bd.sign)
+            return (-*this) * (-bd);
+        if(this->sign)
+            return -((-*this) * bd);
+        if(bd.sign)
+            return -(*this * (-bd));
+
+        if(bd.length() == 1) {
+            BigDecimal res(0);
             int carry = 0;
             res.digits.pop_back();
             
@@ -205,28 +224,20 @@ public:
 
             if(carry)
                 res.digits.push_back(carry);
+            
+            return res;
         }
-        else if(bd == tenBD) {
-            res = res + *this;
-            res.digits.insert(res.digits.begin(), 0);
+        else if(bd == BigDecimal(10)) {
+            return this->tenfold();
         }
         else {
-            BigDecimal ones(bd.digits[0]);
-            BigDecimal divBy10 = bd + zeroBD;
-            divBy10.digits.erase(divBy10.digits.begin());
-
-            BigDecimal t1 = *this * ones;
-            BigDecimal t2 = *this * divBy10 * tenBD;
-            
-            res = t1 + t2;
+            return
+                   *this * bd.digits[0]
+                + (*this * bd.tenth()).tenfold();
         }
-
-        res.sign = sign ^ bd.sign;
-        return res;
     }
     BigDecimal operator * (long long x) {
-        BigDecimal bd(x);
-        return *this * bd;
+        return *this * BigDecimal(x);
     }
 
     BigDecimal power(long long exponent) {
