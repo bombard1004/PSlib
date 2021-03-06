@@ -1,6 +1,6 @@
 // prime.cpp
 // author bombard1004
-// last_update Feb 1 2021
+// last_update Mar 7 2021
 
 #include <bits/stdc++.h>
 
@@ -18,37 +18,54 @@ void getPrime(long long n) {
 
 class PrimeFactorization {
 private:
-    std::vector<std::pair<long long, int>> factors;
-    long long n;
+    std::map<long long, int> _factors;
 
 public:
-    PrimeFactorization(long long _n) {
-        n = _n;
-
-        for(long long p : primes) {
-            if(p * p > _n)
-                break;
-            
-            int exponent = 0;
-            while(_n % p == 0) {
-                _n /= p;
-                exponent++;
-            }
-
-            if(exponent != 0)
-                factors.push_back(std::make_pair(p, exponent));
-        }
-
-        if(_n != 1)
-            factors.push_back(std::make_pair(_n, 1));
+    PrimeFactorization(const PrimeFactorization &pf) {
+        _factors = std::map<long long, int>(pf._factors);
     }
 
-    long long eulerPhi() {
-        long long ret = n;
+    PrimeFactorization(long long n) {
+        for(long long p : primes) {
+            if(p * p > n)
+                break;
+            
+            while(n % p == 0) {
+                n /= p;
+                _factors[p]++;
+            }
+        }
 
-        for(auto fp : factors)
-            ret -= (ret / fp.first);
+        if(n != 1)
+            _factors[n] = 1;
+    }
+
+    std::vector<long long> getFactors() const {
+        std::vector<long long> ret;
+        for(auto it = _factors.begin(); it != _factors.end(); it++)
+            ret.push_back(it->first);
         
         return ret;
     }
+
+    void mulPrime(long long prime, int exponent = 1) {
+        _factors[prime] += exponent;
+        return;
+    }
+
+    int exponentOf(long long prime) const {
+        auto it = _factors.find(prime);
+        if(it == _factors.end()) return 0;
+        else return it->second;
+    }
 };
+
+long long eulerPhi(long long n) {
+    long long ret = n;
+    std::vector<long long> _factors = PrimeFactorization(n).getFactors();
+
+    for(long long factor : _factors)
+        ret -= (ret / factor);
+        
+    return ret;
+}
