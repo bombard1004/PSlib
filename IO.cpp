@@ -1,6 +1,6 @@
 // IO.cpp
 // author bombard1004
-// last_update Feb 20 2021
+// last_update Mar 7 2021
 
 #include <bits/stdc++.h>
 
@@ -27,7 +27,7 @@ double next() {
 }
 template <>
 float next() {
-    float temp; scanf("%d", &temp);
+    float temp; scanf("%f", &temp);
     return temp;
 }
 
